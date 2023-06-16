@@ -1,0 +1,4 @@
+[paths]
+
+path_recording_mac = /Users/armenmkrtumyan/Desktop/Recordings/
+path_recording_windows = /to be configured
