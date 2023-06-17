@@ -80,7 +80,7 @@ def show_button(grid_frame, start_button, path_opt, fingerprint_path):
     fingerprint_path = path_opt
     fingerprint_button=CTkButton(grid_frame,text = 'Fingerprint', font=('calibre',10, 'bold'),
                                  command = lambda: get_picture(fingerprint_path),
-                      hover_color = "green", width = 110, height = 25, bg = "navy",
+                                 width = 110, height = 25, fg_color = "navy", hover_color = "cornflowerblue",
                                  image=CTkImage(light_image= Image.open('./icons_backgrounds/touch-id-icon-vector-isolated-600w-1483844870-transformed-fotor-bg-remover-20230616124855.png') ,
                    size=(25, 25)), compound='right') #Does not show untill turned on
     start_button.grid_forget()
@@ -306,60 +306,59 @@ def get_picture(path):
         return i
 
 
-    while True:
-        print("----------------")
-        if finger.read_templates() != adafruit_fingerprint.OK:
-            raise RuntimeError("Failed to read templates")
-        print("Fingerprint templates: ", finger.templates)
-        if finger.count_templates() != adafruit_fingerprint.OK:
-            raise RuntimeError("Failed to read templates")
-        print("Number of templates found: ", finger.template_count)
-        if finger.read_sysparam() != adafruit_fingerprint.OK:
-            raise RuntimeError("Failed to get system parameters")
-        print("Size of template library: ", finger.library_size)
-        print("e) enroll print")
-        print("f) find print")
-        print("d) delete print")
-        print("s) save fingerprint image")
-        print("r) reset library")
-        print("q) quit")
-        print("----------------")
-        c = input("> ")
+    # while True:
+    #     print("----------------")
+    #     if finger.read_templates() != adafruit_fingerprint.OK:
+    #         raise RuntimeError("Failed to read templates")
+    #     print("Fingerprint templates: ", finger.templates)
+    #     if finger.count_templates() != adafruit_fingerprint.OK:
+    #         raise RuntimeError("Failed to read templates")
+    #     print("Number of templates found: ", finger.template_count)
+    #     if finger.read_sysparam() != adafruit_fingerprint.OK:
+    #         raise RuntimeError("Failed to get system parameters")
+    #     print("Size of template library: ", finger.library_size)
+    #     print("e) enroll print")
+    #     print("f) find print")
+    #     print("d) delete print")
+    #     print("s) save fingerprint image")
+    #     print("r) reset library")
+    #     print("q) quit")
+    #     print("----------------")
+    #     c = input("> ")
 
-        if c == "e":
-            enroll_finger(get_num(finger.library_size))
-        if c == "f":
-            if get_fingerprint():
-                print("Detected #", finger.finger_id,
-                      "with confidence", finger.confidence)
-            else:
-                print("Finger not found")
-        if c == "d":
-            if finger.delete_model(get_num(finger.library_size)) == adafruit_fingerprint.OK:
-                print("Deleted!")
-            else:
-                print("Failed to delete")
-        if c == "s":
-            if save_fingerprint_image("fingerprint.png"):
-                print("Fingerprint image saved")
-            else:
-                print("Failed to save fingerprint image")
-        if c == "r":
-            if finger.empty_library() == adafruit_fingerprint.OK:
-                print("Library empty!")
-            else:
-                print("Failed to empty library")
-        if c == "q":
-            print("Exiting fingerprint example program")
-            raise SystemExit
+    #     if c == "e":
+    #         enroll_finger(get_num(finger.library_size))
+    #     if c == "f":
+    #         if get_fingerprint():
+    #             print("Detected #", finger.finger_id,
+    #                   "with confidence", finger.confidence)
+    #         else:
+    #             print("Finger not found")
+    #     if c == "d":
+    #         if finger.delete_model(get_num(finger.library_size)) == adafruit_fingerprint.OK:
+    #             print("Deleted!")
+    #         else:
+    #             print("Failed to delete")
+    #     if c == "s":
+    #         if save_fingerprint_image("fingerprint.png"):
+    #             print("Fingerprint image saved")
+    #         else:
+    #             print("Failed to save fingerprint image")
+    #     if c == "r":
+    #         if finger.empty_library() == adafruit_fingerprint.OK:
+    #             print("Library empty!")
+    #         else:
+    #             print("Failed to empty library")
+    #     if c == "q":
+    #         print("Exiting fingerprint example program")
+    #         raise SystemExit
     save_fingerprint_image(path[:-7] + "FPT.png")
 
     img = CTkImage(light_image=Image.open(path[:-7] + "FPT.png"),
                                   size=(350, 350))
     label = CTkLabel(root, image = img, text = "")
     label.image = img
-    label.grid(row=4,column=0, columnspan=5, rowspan=30,
-               padx= 25, pady= 50)
+    label.grid(padx= 80, pady= 170)
 
     hide_button()
 
@@ -372,8 +371,12 @@ def get_picture(path):
 def graph(path_imu, path_opt):
     global save_button, check_buttons_1, check_buttons_2, check_buttons_3, check_buttons_4
 
-    graph_name = path_imu[-31:-29]+"_"+path_imu[-21:-8]
-    graph_path = '/'.join(path_imu.split('/')[:-3]) + '/Plots/' + graph_name + '.png'
+    if(path_imu[-31] != '0'):
+        graph_name = "Age " + path_imu[-31:-29]+", " + path_imu[-21:-8]
+    else:
+        graph_name = "Age " + path_imu[-30]+", " + path_imu[-21:-8]
+    graph_name_path = path_imu[-31:-29]+"_"+path_imu[-21:-8]
+    graph_path = '/'.join(path_imu.split('/')[:-3]) + '/Plots/' + graph_name_path + '.png'
 
     def save(event):
         button_axis.set_visible(False)
@@ -386,7 +389,7 @@ def graph(path_imu, path_opt):
             visible_range_y = [[max(i.get_data()[1]), min(i.get_data()[1])] for i in visible_lines]
             minimum = min(min(i) for i in visible_range_y)
             maximum = max(max(i) for i in visible_range_y)
-            axis.set_ylim(minimum, maximum)
+            axis.set_ylim(minimum-0.01, maximum+0.01)
 
     IMU = pd.read_csv(path_imu, index_col="time_millisec")
     OPT = pd.read_csv(path_opt, index_col="num")
@@ -400,25 +403,37 @@ def graph(path_imu, path_opt):
 
     plt.subplots_adjust(hspace=0.6, right=0.8)
 
-    x_1 = IMU.index
+    x_1 = IMU.index / 100 * 2
 
-    y_1_1 = IMU['acc_x']
-    y_1_2 = IMU['acc_y']
-    y_1_3 = IMU['acc_z']
+    max_1_1 = max(abs(IMU['acc_x']))
+    y_1_1 = IMU['acc_x'] / max_1_1
+    max_1_2 = max(abs(IMU['acc_y']))
+    y_1_2 = IMU['acc_y'] / max_1_2
+    max_1_3 = max(abs(IMU['acc_z']))
+    y_1_3 = IMU['acc_z'] / max_1_3
 
-    y_2_1 = IMU['gyro_x']
-    y_2_2 = IMU['gyro_y']
-    y_2_3 = IMU['gyro_z']
+    max_2_1 = max(abs(IMU['gyro_x']))
+    y_2_1 = IMU['gyro_x'] / max_2_1
+    max_2_2 = max(abs(IMU['gyro_y']))
+    y_2_2 = IMU['gyro_y'] / max_2_2
+    max_2_3 = max(abs(IMU['gyro_z']))
+    y_2_3 = IMU['gyro_z'] / max_2_3
 
-    y_3_1 = IMU['mag_x']
-    y_3_2 = IMU['mag_y']
-    y_3_3 = IMU['mag_z']
+    max_3_1 = max(abs(IMU['mag_x']))
+    y_3_1 = IMU['mag_x'] / max_3_1
+    max_3_2 = max(abs(IMU['mag_y']))
+    y_3_2 = IMU['mag_y'] / max_3_2
+    max_3_3 = max(abs(IMU['mag_z']))
+    y_3_3 = IMU['mag_z'] / max_3_3
 
-    x_2 = OPT.index
+    x_2 = OPT.index / 100
 
-    y_4_1 = OPT['ppg_sig1']
-    y_4_2 = OPT['ppg_sig2']
-    y_4_3 = OPT['ppg_sig3']
+    max_4_1 = max(abs(OPT['ppg_sig1']))
+    y_4_1 = OPT['ppg_sig1'] / max_4_1
+    max_4_2 = max(abs(OPT['ppg_sig2']))
+    y_4_2 = OPT['ppg_sig2'] / max_4_2
+    max_4_3= max(abs(OPT['ppg_sig3']))
+    y_4_3 = OPT['ppg_sig3'] / max_4_3
 
     fontdict = {
         'fontsize': 10,
@@ -496,7 +511,7 @@ def graph(path_imu, path_opt):
                                 fontdict = fontdict)
     ax_4_y_label = ax_4.set_ylabel("PPG",
                                 fontdict = fontdict)
-    x_4_label = ax_4.set_xlabel("Time")
+    x_4_label = ax_4.set_xlabel("Time (seconds)")
 
     #Label Configurations ----------------------------------------
 
@@ -579,15 +594,15 @@ def graph(path_imu, path_opt):
 # In[5]:
 
 
-def set_visibility(lines, axis):
-    #OR
-    #axis.relim()
-    visible_lines = [i for i in lines if i.get_visible()]
-    if(visible_lines):
-        visible_range_y = [[max(i.get_data()[1]), min(i.get_data()[1])] for i in visible_lines]
-        minimum = min(min(i) for i in visible_range_y)
-        maximum = max(max(i) for i in visible_range_y)
-        axis.set_ylim(minimum, maximum)
+# def set_visibility(lines, axis):
+#     #OR
+#     #axis.relim()
+#     visible_lines = [i for i in lines if i.get_visible()]
+#     if(visible_lines):
+#         visible_range_y = [[max(i.get_data()[1]), min(i.get_data()[1])] for i in visible_lines]
+#         minimum = min(min(i) for i in visible_range_y)
+#         maximum = max(max(i) for i in visible_range_y)
+#         axis.set_ylim(minimum-1, maximum+1)
 #def graph(root, path_opt, path_imu, graph_name, graph_path):
 
 def select_graph(database_path):
@@ -613,6 +628,7 @@ def select_graph(database_path):
         def create_selection_window(filenames):
             selection_window = CTkToplevel()
             selection_window.title("Select a File")
+            selection_window.geometry("+%d+%d" %(520,0))
 
             var = StringVar()
 
@@ -620,7 +636,7 @@ def select_graph(database_path):
                 radiobutton = CTkRadioButton(selection_window, text=filename, variable=var, value=filename)
                 radiobutton.pack(anchor='w')
 
-            select_button = CTkButton(selection_window, text="Select",
+            select_button = CTkButton(selection_window, text="Select", fg_color = "navy", hover_color = "cornflowerblue",
                                       command= lambda: get_selected_filename(var, selection_window))
             select_button.pack()
 
@@ -836,7 +852,8 @@ def collect_data(path_opt, path_imu, grid_frame, start_button, duration, fingerp
 #     print('ports:', ports, '\n')
 
     for i in serial_ports():
-        if i=='/dev/tty.usbserial-0001':
+        #if i == '/dev/tty.usbserial-51850143861':
+        if i == '/dev/tty.usbserial-0001':
             port = i
 
     ser = serial.Serial(port=port, baudrate=115200, timeout=.1)
@@ -1027,10 +1044,10 @@ if __name__ == "__main__":
     label.place(x=0,y=0)
     root.update()
     # Creating labels and entries
-    grid_frame = CTkFrame(root)
+    grid_frame = CTkFrame(root, fg_color="black")
     grid_frame.place(x=0, y=0)
-    gender_dropdown = CTkOptionMenu(grid_frame, variable = gender, values = ["male", "female"],
-                                 button_hover_color = "green", anchor = 'center', width = 100, height = 20,
+    gender_dropdown = CTkOptionMenu(grid_frame, variable = gender, values = ["male", "female"],fg_color = "navy",
+                                 button_hover_color = "cornflowerblue", anchor = 'center', width = 100, height = 20,
                                  dynamic_resizing = True)
     database_label = CTkLabel(grid_frame, width = 110, text = 'Database Path', font=('calibre',10, 'bold'),
                              anchor="w")
@@ -1056,7 +1073,7 @@ if __name__ == "__main__":
 
     #Creating buttons
 
-    start_button=CTkButton(grid_frame,text = 'Start          ', font=('calibre',10, 'bold'),
+    start_button=CTkButton(grid_frame,text = 'Start          ', font=('calibre',10, 'bold'), fg_color = "navy", hover_color = "cornflowerblue",
                            command = lambda : start(database_path.get(),
                                                     recording_folder.get(),
                                                     duration.get(),
@@ -1065,19 +1082,19 @@ if __name__ == "__main__":
                                                     grid_frame,
                                                     start_button,
                                                     ),
-                          hover_color = "green", width = 110, height = 25,
+                           width = 110, height = 25,
                           image=CTkImage(light_image= Image.open('./icons_backgrounds/play-icon-600w-350690969-transformed-fotor-bg-remover-20230616124313.png'), size=(25, 25)) , compound = 'right')
     start_button.bind("<Enter>", lambda event: show_tooltip(event, "Start recording"))
     start_button.bind("<Leave>", hide_tooltip)
     browse_button = CTkButton(grid_frame, font=('calibre',10, 'bold'), text="Browse        ", command=lambda: browsefunc(database_path),
-                            hover_color = "green", width = 100, height = 25,
+                            width = 100, height = 25,fg_color = "navy", hover_color = "cornflowerblue",
                              image=CTkImage(light_image= Image.open('./icons_backgrounds/flat-folder-icon-vector-illustration-600w-1936486378-transformed-fotor-bg-remover-20230616124456.png') ,
                    size=(25, 25)), compound='right')
     browse_button.bind("<Enter>", lambda event: show_tooltip(event, "Select directory"))
     browse_button.bind("<Leave>", hide_tooltip)
     graph_button = CTkButton(grid_frame, text="Graph       ", font=('calibre',10, 'bold'),
                              command = lambda: select_graph(database_path.get() + recording_folder.get() + '/'),
-                             hover_color = "green", width = 110, height = 25,
+                              width = 110, height = 25,fg_color = "navy", hover_color = "cornflowerblue",
                              image=CTkImage(light_image= Image.open('./icons_backgrounds/png-transparent-plot-computer-icons-chart-graph-of-a-function-line-angle-text-logo-fotor-bg-remover-20230616124723.png') ,
                    size=(25, 25)), compound='right')
     graph_button.bind("<Enter>", lambda event: show_tooltip(event, "Select the graph"))
