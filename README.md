@@ -18,13 +18,13 @@ This Python project is a data logger with a graphical user interface (GUI) built
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/age-determination-logger.git
+git clone https://github.com/ArmenMkrtumyan/age-determination.git
 ```
 
 2. Navigate to the project directory:
 
 ```bash
-cd age-determination-logger
+cd age-determination
 ```
 
 3. Install the required dependencies:
@@ -36,7 +36,7 @@ pip install -r requirements.txt
 4. Run the application:
 
 ```bash
-python main.py
+python3 Age_Determination.py
 ```
 
 ## Usage
