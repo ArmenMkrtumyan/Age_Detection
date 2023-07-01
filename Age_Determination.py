@@ -9,9 +9,7 @@
 #get_ipython().run_line_magic('matplotlib', 'tk')
 
 from customtkinter import *
-#import tkinter
 from PIL import ImageTk, Image
-#import itertools
 import serial
 import time
 import pandas as pd
@@ -27,12 +25,16 @@ import os
 from datetime import datetime
 from matplotlib.widgets import Slider, CheckButtons, Button
 from tkinter import messagebox
-#import os.path
-#from os import path
-#import xlsxwriter
 import configparser
 import adafruit_fingerprint
 
+#Images
+background  = './icons_backgrounds/main_background.jpeg'
+startt      = './icons_backgrounds/start_recording.png'
+touch_id    = './icons_backgrounds/touch_id.png'
+folder      = './icons_backgrounds/folder.png'
+plott       = './icons_backgrounds/plot.png'
+information = './icons_backgrounds/info.png'
 
 # # Serial Ports
 
@@ -78,15 +80,18 @@ print(serial_ports())
 def show_button(grid_frame, start_button, path_opt, fingerprint_path):
     global fingerprint_button
     fingerprint_path = path_opt
-    fingerprint_button=CTkButton(grid_frame,text = 'Fingerprint', font=('calibre',10, 'bold'),
+    fingerprint_button=CTkButton(grid_frame, text = 'Fingerprint',
+                                 font=('calibre',12, 'bold'),
                                  command = lambda: get_picture(fingerprint_path),
-                                 width = 110, height = 25, fg_color = "navy", hover_color = "cornflowerblue",
-                                 image=CTkImage(light_image= Image.open('./icons_backgrounds/touch-id-icon-vector-isolated-600w-1483844870-transformed-fotor-bg-remover-20230616124855.png') ,
-                   size=(25, 25)), compound='right') #Does not show untill turned on
+                                 width = 110, height = 25, fg_color = "navy",
+                                 hover_color = "cornflowerblue",
+                                 image = CTkImage(light_image= Image.open(touch_id),
+                                                  size=(25, 25)), compound='right')
     start_button.grid_forget()
     fingerprint_button.grid(row=1,column=5)
+    #For MacOs
     fingerprint_button.bind("<Enter>", lambda event: show_tooltip(event, "Scan the finger"))
-    fingerprint_button.bind("<Leave>", hide_tooltip)
+    fingerprint_button.bind("<Leave>", lambda event: hide_tooltip(event, tooltip))
 def hide_button():
     fingerprint_button.grid_forget()
     start_button.grid(row=1,column=5)
@@ -375,7 +380,7 @@ def graph(path_imu, path_opt):
         graph_name = "Age " + path_imu[-31:-29]+", " + path_imu[-21:-8]
     else:
         graph_name = "Age " + path_imu[-30]+", " + path_imu[-21:-8]
-    graph_name_path = path_imu[-31:-29]+"_"+path_imu[-21:-8]
+    graph_name_path = path_imu[-31:-29] + "_" + path_imu[-21:-8]
     graph_path = '/'.join(path_imu.split('/')[:-3]) + '/Plots/' + graph_name_path + '.png'
 
     def save(event):
@@ -501,7 +506,7 @@ def graph(path_imu, path_opt):
 
     #Axis Configurations -----------------------------------------
 
-    ax_title = ax_1.set_title(graph_name)
+    ax_title = ax_1.set_title(graph_name, y = 1.2, fontdict = {'fontsize' : 12})
 
     ax_1_y_label = ax_1.set_ylabel("Accelerometer",
                                 fontdict = fontdict)
@@ -628,6 +633,7 @@ def select_graph(database_path):
         def create_selection_window(filenames):
             selection_window = CTkToplevel()
             selection_window.title("Select a File")
+            #selection_window.geometry("+%d+%d" %(520,0))
             selection_window.geometry("+%d+%d" %(520,0))
 
             var = StringVar()
@@ -643,7 +649,7 @@ def select_graph(database_path):
             selection_window.mainloop()
 
         # Example usage
-        filenames = all_files
+        filenames = sorted(all_files)
         create_selection_window(filenames)
 
 
@@ -924,7 +930,6 @@ def start(database_path,recording_folder, duration, gender, age, grid_frame, sta
             messagebox.showerror('Age Error', 'Error: Age is invalid!\n Data not recorded', icon=messagebox.ERROR)
             error = True
     except ValueError:
-
         messagebox.showerror('Age Error', 'Error: Age must be a number!\n Data not recorded', icon=messagebox.ERROR)
         error = True
 
@@ -957,13 +962,13 @@ def start(database_path,recording_folder, duration, gender, age, grid_frame, sta
         time = datetime.today().strftime('%H%M%S')
 
         trial_folder_name = recording_folder
-        if(len(age) == 1):
+        if (len(age) == 1):
             current_recording_folder = trial_folder_name + '_0' + age + '_' + date
         else:
             current_recording_folder = trial_folder_name + '_' + age + '_' + date
         file_name = datetime.today().strftime('%y%m%d') + '_' + datetime.today().strftime('%H%M%S')
 
-        fingerprint_path = database_path + 'Plots/' + age+"_"+file_name + '.png'
+        fingerprint_path = database_path + 'Plots/' + age + "_" + file_name + '.png'
 
         file_name_opt = file_name + '_OPT.csv'
         file_name_imu = file_name + '_IMU.csv'
@@ -997,6 +1002,7 @@ def start(database_path,recording_folder, duration, gender, age, grid_frame, sta
 
 
 if __name__ == "__main__":
+
     def show_tooltip(event, text):
         x = event.widget.winfo_rootx() + event.widget.winfo_width()
         y = event.widget.winfo_rooty() + event.widget.winfo_height()
@@ -1006,8 +1012,19 @@ if __name__ == "__main__":
         tooltip.wm_geometry(f"+{x}+{y}")
         tooltip_label = CTkLabel(tooltip, text=text, width=10, height=10)
         tooltip_label.grid()
-    def hide_tooltip(event):
+    def hide_tooltip(event, tooltip):
         tooltip.destroy()
+    def info():
+        information = CTkToplevel(root)
+        information.geometry("450x80+0+0")
+        information.title("Info")
+        # info_frame = CTkFrame(root, fg_color="black")
+        # info_frame.place(x=0, y=0)
+
+        version = CTkLabel(information, text_color = "white", text = 'Age Determination v1.0\n This program was created in collaboration with "Tumo Labs" and "Oqni"\n\n Author: Armen Mkrtumyan \n Ⓒ 2023. All rights reserved.', font=('calibre',12, 'bold'),
+                             anchor="nw")
+        version.place(x=0, y= 0)
+
     root = CTk()
     root.title("Data logger")
     # Database path
@@ -1017,9 +1034,9 @@ if __name__ == "__main__":
     #default_path = config.get('paths', 'path_recording_windows')
 
     # Setting the windows size
-    root.geometry("500x600+0+0")
-    root.minsize(520, 600)
-    root.maxsize(520, 600)
+    root.geometry("500x700+0+0")
+    root.minsize(520, 700)
+    root.maxsize(520, 700)
 
     # Declaring string variable for storing Entries
     database_path= StringVar(root)
@@ -1037,43 +1054,48 @@ if __name__ == "__main__":
 
 
     root.update()
-    img = CTkImage(light_image= Image.open('./icons_backgrounds/fingerprint-scanning-digital-biometric-security-system-data-protection-M4YGP2-transformed.jpeg') ,
+    img = CTkImage(light_image= Image.open(background) ,
                    size=(520, 635))
     label = CTkLabel(root, image = img, text = "")
     label.image = img
-    label.place(x=0,y=0)
+    label.place(x=0,y=100)
     root.update()
     # Creating labels and entries
     grid_frame = CTkFrame(root, fg_color="black")
     grid_frame.place(x=0, y=0)
-    gender_dropdown = CTkOptionMenu(grid_frame, variable = gender, values = ["male", "female"],fg_color = "navy",
-                                 button_hover_color = "cornflowerblue", anchor = 'center', width = 100, height = 20,
-                                 dynamic_resizing = True)
-    database_label = CTkLabel(grid_frame, width = 110, text = 'Database Path', font=('calibre',10, 'bold'),
+
+    database_label = CTkLabel(grid_frame, width = 110, text_color = "white", text = 'Database Path', font=('calibre',12, 'bold'),
                              anchor="w")
     database_entry = CTkEntry(grid_frame, width=260, height = 25, textvariable = database_path,
                               font=('calibre',10,'normal'), corner_radius = 10, border_width = 3)
-    recording_label = CTkLabel(grid_frame, width = 70, text = 'Recording folder', font = ('calibre',10,'bold'),
+
+    recording_label = CTkLabel(grid_frame, width = 70, text_color = "white", text = 'Recording folder', font = ('calibre',12,'bold'),
                                anchor = 'w')
     recording_entry= CTkEntry(grid_frame, width = 110, height = 25, textvariable = recording_folder,
                               font = ('calibre',10,'normal'), corner_radius = 10, border_width = 3)
+
+    Gender_label = CTkLabel(grid_frame, text = 'Gender', text_color = "white",
+                        font=('calibre',12, 'bold'), compound = 'left', anchor = 'w')
+    gender_dropdown = CTkOptionMenu(grid_frame, dropdown_fg_color = "navy", dropdown_text_color = "white", variable = gender, values = ["male", "female"],fg_color = "navy",
+                                    button_hover_color = "cornflowerblue", anchor = 'center', width = 100, height = 20,
+                                    dynamic_resizing = True)
     age_entry= CTkEntry(grid_frame, width = 55, height = 25, textvariable = age,
                               font = ('calibre',10,'normal'), corner_radius = 10, border_width = 3)
     age_entry.bind("<Enter>", lambda event: show_tooltip(event, "1-99 years"))
-    age_entry.bind("<Leave>", hide_tooltip)
-    duration_label = CTkLabel(grid_frame, text = 'Duration', font = ('calibre',10,'bold'), compound = 'center',
+    age_entry.bind("<Leave>", lambda event: hide_tooltip(event, tooltip))
+    duration_label = CTkLabel(grid_frame, text = 'Duration',text_color = "white", font = ('calibre',12,'bold'), compound = 'center',
                               anchor = 'center', justify=LEFT)
     duration_entry = CTkEntry(grid_frame, width = 55, height = 25,  font = ('calibre',10,'bold'),
                              corner_radius = 10, border_width = 3, textvariable = duration)
     duration_entry.bind("<Enter>", lambda event: show_tooltip(event, "1-120 seconds"))
-    duration_entry.bind("<Leave>", hide_tooltip)
-    Gender_label = CTkLabel(grid_frame, text = 'Gender', font=('calibre',10, 'bold'), compound = 'left', anchor = 'w')
-    Age_label = CTkLabel(grid_frame, text = "Age", font=('calibre',10, 'bold'))
+    duration_entry.bind("<Leave>", lambda event: hide_tooltip(event, tooltip))
+
+    Age_label = CTkLabel(grid_frame, text = "Age", text_color = "white", font=('calibre',10, 'bold'))
 
 
     #Creating buttons
 
-    start_button=CTkButton(grid_frame,text = 'Start          ', font=('calibre',10, 'bold'), fg_color = "navy", hover_color = "cornflowerblue",
+    start_button=CTkButton(grid_frame,text = 'Start          ', font=('calibre',12, 'bold'), fg_color = "navy", hover_color = "cornflowerblue",
                            command = lambda : start(database_path.get(),
                                                     recording_folder.get(),
                                                     duration.get(),
@@ -1083,22 +1105,28 @@ if __name__ == "__main__":
                                                     start_button,
                                                     ),
                            width = 110, height = 25,
-                          image=CTkImage(light_image= Image.open('./icons_backgrounds/play-icon-600w-350690969-transformed-fotor-bg-remover-20230616124313.png'), size=(25, 25)) , compound = 'right')
+                          image=CTkImage(light_image= Image.open(startt), size=(25, 25)) , compound = 'right')
     start_button.bind("<Enter>", lambda event: show_tooltip(event, "Start recording"))
-    start_button.bind("<Leave>", hide_tooltip)
-    browse_button = CTkButton(grid_frame, font=('calibre',10, 'bold'), text="Browse        ", command=lambda: browsefunc(database_path),
+    start_button.bind("<Leave>", lambda event: hide_tooltip(event, tooltip))
+    browse_button = CTkButton(grid_frame, font=('calibre',12, 'bold'), text="Browse        ", command=lambda: browsefunc(database_path),
                             width = 100, height = 25,fg_color = "navy", hover_color = "cornflowerblue",
-                             image=CTkImage(light_image= Image.open('./icons_backgrounds/flat-folder-icon-vector-illustration-600w-1936486378-transformed-fotor-bg-remover-20230616124456.png') ,
+                             image=CTkImage(light_image= Image.open(folder) ,
                    size=(25, 25)), compound='right')
     browse_button.bind("<Enter>", lambda event: show_tooltip(event, "Select directory"))
-    browse_button.bind("<Leave>", hide_tooltip)
-    graph_button = CTkButton(grid_frame, text="Graph       ", font=('calibre',10, 'bold'),
+    browse_button.bind("<Leave>", lambda event: hide_tooltip(event, tooltip))
+    graph_button = CTkButton(grid_frame, text="Graph       ", font=('calibre',12, 'bold'),
                              command = lambda: select_graph(database_path.get() + recording_folder.get() + '/'),
                               width = 110, height = 25,fg_color = "navy", hover_color = "cornflowerblue",
-                             image=CTkImage(light_image= Image.open('./icons_backgrounds/png-transparent-plot-computer-icons-chart-graph-of-a-function-line-angle-text-logo-fotor-bg-remover-20230616124723.png') ,
+                             image=CTkImage(light_image= Image.open(plott) ,
                    size=(25, 25)), compound='right')
     graph_button.bind("<Enter>", lambda event: show_tooltip(event, "Select the graph"))
-    graph_button.bind("<Leave>", hide_tooltip)
+    graph_button.bind("<Leave>", lambda event: hide_tooltip(event, tooltip))
+    info_button = CTkButton(grid_frame, font=('calibre',12, 'bold'), text="Info          ", command = info,
+                            width = 100, height = 25,fg_color = "navy", hover_color = "cornflowerblue",
+                             image=CTkImage(light_image= Image.open(information) ,
+                   size=(25, 25)), compound='right')
+    browse_button.bind("<Enter>", lambda event: show_tooltip(event, "Additional information"))
+    browse_button.bind("<Leave>", lambda event: hide_tooltip(event, tooltip))
 
 
     #Putting everything on a grid
@@ -1117,6 +1145,7 @@ if __name__ == "__main__":
     browse_button.grid  (row=0, column=5, sticky="w",padx=10, pady=5)
     start_button.grid   (row=1,column=5, sticky="w",padx=10, pady=5)
     graph_button.grid   (row=2,column=5, sticky="w",padx=10, pady=5)
+    info_button.grid    (row=3, column=5, sticky="w", padx=10, pady=5)
 
     root.mainloop()
 
